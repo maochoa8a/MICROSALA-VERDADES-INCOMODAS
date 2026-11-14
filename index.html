@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microsala · ¿Un título universitario garantiza una mejor vida económica?</title>
+<meta name="description" content="Museo Digital de las Verdades Incómodas · Microsala sobre educación superior, oportunidades y desigualdad en Colombia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--plum:#540045;--rose:#c60052;--coral:#ff714b;--lime:#eaff87;--mint:#acffe9;--ink:#1d0a19;--paper:#fff;--muted:#6a5a66;--line:#ead9e5}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#12000f;font-family:Inter,system-ui,sans-serif;color:var(--ink)}
+h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;margin:0}
+button{font-family:inherit}
+#scene{position:fixed;inset:0;display:block;cursor:grab}
+#scene:active{cursor:grabbing}
+.fallback-bg{position:fixed;inset:0;background:radial-gradient(900px 500px at 70% 20%,#c6005244,transparent),linear-gradient(160deg,#20001b,#540045)}
+
+/* TOP BAR */
+.top{position:fixed;top:0;left:0;right:0;z-index:35;display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(#12000fee,#12000f00)}
+.brand{color:#fff;font-family:"Space Grotesk";font-weight:700;font-size:.92rem;letter-spacing:.04em;white-space:nowrap}
+.brand small{display:block;color:var(--lime);font-size:.66rem;letter-spacing:.16em;font-weight:500}
+.stations{display:flex;gap:6px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+.stations button{border:1px solid #ffffff33;background:#ffffff12;color:#fff;border-radius:12px;padding:9px 12px;font-weight:600;font-size:.82rem;cursor:pointer;transition:.2s;backdrop-filter:blur(6px)}
+.stations button b{color:var(--lime);margin-right:4px}
+.stations button:hover{background:#ffffff26}
+.stations button.on{background:var(--lime);color:var(--plum);border-color:var(--lime)}
+.stations button.on b{color:var(--rose)}
+.stations button.done::after{content:"✓";margin-left:5px;color:var(--mint)}
+.stations button.on.done::after{color:var(--plum)}
+.homebtn{border:1px solid #ffffff33;background:transparent;color:#fff;border-radius:12px;padding:9px 12px;cursor:pointer;font-weight:600;font-size:.82rem}
+.homebtn:hover{background:#ffffff1f}
+@media(max-width:860px){.brand{display:none}.stations button span{display:none}.stations button{padding:9px 11px}}
+
+/* PORTADA */
+#cover{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:24px;background:radial-gradient(800px 500px at 50% 40%,#54004588,#12000fdd);transition:opacity .8s}
+#cover.hide{opacity:0;pointer-events:none}
+.cover-card{max-width:760px;text-align:center;color:#fff}
+.kicker{color:var(--lime);font-size:.75rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+.cover-card h1{font-size:clamp(2rem,5.6vw,3.8rem);line-height:1.04;margin:16px 0}
+.cover-card h1 em{font-style:normal;color:var(--coral)}
+.cover-card p{color:#f3dcec;font-size:1.08rem;max-width:600px;margin:0 auto}
+.cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.btn{border:0;border-radius:14px;padding:14px 22px;font-weight:700;cursor:pointer;font-size:.98rem;transition:.2s}
+.btn.lime{background:var(--lime);color:var(--plum)} .btn.lime:hover{transform:translateY(-2px);box-shadow:0 10px 30px #eaff8755}
+.btn.ghost{background:#ffffff14;color:#fff;border:1px solid #ffffff40} .btn.ghost:hover{background:#ffffff26}
+.btn.plum{background:var(--plum);color:#fff} .btn.plum:hover{background:var(--rose)}
+.btn.line{background:#fff;color:var(--plum);border:1.5px solid var(--line)} .btn.line:hover{border-color:var(--rose)}
+.hint{margin-top:22px;font-size:.82rem;color:#d9bfd2}
+
+/* PANEL */
+#panel{position:fixed;z-index:15;right:18px;top:78px;bottom:84px;width:min(500px,calc(100vw - 36px));background:#fffffff7;border-radius:24px;box-shadow:0 30px 80px #0008;display:flex;flex-direction:column;overflow:hidden;transform:translateX(120%);transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+#panel.open{transform:none}
+.p-head{padding:20px 24px 14px;background:linear-gradient(120deg,var(--plum),var(--rose));color:#fff;position:relative}
+.p-head .tag{font-size:.7rem;letter-spacing:.18em;color:var(--lime);font-weight:600}
+.p-head h2{font-size:1.45rem;line-height:1.15;margin-top:6px}
+.p-head .close{position:absolute;right:14px;top:14px;border:0;background:#ffffff26;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem}
+.p-body{padding:20px 24px 26px;overflow:auto;flex:1}
+.p-body p{line-height:1.6;margin:0 0 12px}
+.opts{display:grid;gap:8px;margin:12px 0}
+.opt{text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;font-size:.95rem;line-height:1.35;transition:.15s;color:var(--ink)}
+.opt:hover{border-color:var(--rose)}
+.opt.sel{border-color:var(--plum);background:#f8eef5}
+.opt.ok{border-color:#1f9d6b;background:#e9fbf3}
+.opt.bad{border-color:var(--coral);background:#fff1ec}
+.fb{border-radius:14px;padding:12px 14px;margin-top:10px;font-size:.93rem;line-height:1.5;background:#f6f0f4;border-left:4px solid var(--plum)}
+.fb.ok{background:#ecfbf4;border-color:#1f9d6b}.fb.bad{background:#fff3ee;border-color:var(--coral)}
+.qhead{font-weight:700;margin:16px 0 4px;color:var(--plum)}
+.seg{display:inline-flex;background:#f3e9f0;border-radius:12px;padding:4px;margin:6px 0 10px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:8px 12px;border-radius:9px;font-weight:600;color:var(--muted);cursor:pointer;font-size:.84rem}
+.seg button.on{background:var(--plum);color:#fff}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.stat{background:#f8f1f6;border-radius:14px;padding:12px;text-align:left;border:0;cursor:pointer;transition:.15s;font-family:inherit}
+.stat:hover{background:#f1e2ec;transform:translateY(-2px)}
+.stat b{display:block;font-family:"Space Grotesk";font-size:1.5rem;color:var(--rose)}
+.stat span{font-size:.75rem;color:var(--muted);line-height:1.3;display:block}
+.chartbox{position:relative;height:220px;margin:6px 0 4px}
+.src{font-size:.78rem;color:var(--muted);margin-top:4px}
+.src a{color:var(--rose)}
+.more{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed var(--rose);color:var(--rose);background:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:.84rem;cursor:pointer;margin:6px 6px 0 0}
+.more:hover{background:#fff1f6}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.view{border-radius:16px;padding:14px;cursor:pointer;border:2px solid transparent;transition:.2s;font-size:.88rem;line-height:1.45;text-align:left;font-family:inherit}
+.view.a{background:#eef9f5;color:#0f4436}.view.b{background:#fff3ee;color:#6b2412}
+.view.on{border-color:var(--plum);transform:translateY(-2px);box-shadow:0 8px 20px #54004522}
+.view h3{font-size:1rem;margin-bottom:4px}
+.versus{background:#f8f1f6;border-radius:14px;padding:14px;font-size:.9rem;line-height:1.5}
+.versus ul{margin:6px 0 0;padding-left:18px}
+.score{display:flex;gap:6px;margin:6px 0 4px}
+.score i{flex:1;height:8px;border-radius:9px;background:#eadbe5}
+.score i.ok{background:#1f9d6b}.score i.bad{background:var(--coral)}
+.verdict-box{background:linear-gradient(120deg,#540045,#8a0057);color:#fff;border-radius:16px;padding:16px;margin:10px 0}
+.verdict-box b{color:var(--lime)}
+details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0;background:#fff}
+details summary{cursor:pointer;font-weight:600;color:var(--plum)}
+details li{margin:4px 0;font-size:.88rem;line-height:1.45}
+.p-foot{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line);background:#fff}
+.p-foot .btn{flex:1;padding:12px;font-size:.9rem}
+.p-foot .btn:disabled{opacity:.35;cursor:not-allowed}
+.wc{font-size:.7rem;color:#a08b9a;text-align:right;margin-top:-6px}
+@media(max-width:700px){#panel{right:0;left:0;width:100%;top:auto;bottom:0;height:72vh;border-radius:24px 24px 0 0;transform:translateY(110%)}#panel.open{transform:none}.stat-row{grid-template-columns:1fr 1fr 1fr}.views{grid-template-columns:1fr}}
+
+/* MODAL */
+#modal{position:fixed;inset:0;z-index:40;background:#12000fcc;display:none;place-items:center;padding:18px}
+#modal.open{display:grid}
+.m-card{background:#fff;border-radius:22px;max-width:640px;width:100%;max-height:86vh;overflow:auto;box-shadow:0 30px 90px #000a}
+.m-head{padding:18px 22px;background:var(--plum);color:#fff;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;position:sticky;top:0}
+.m-head .kicker{font-size:.68rem}
+.m-head h3{font-size:1.2rem;margin-top:4px}
+.m-head button{border:0;background:#ffffff26;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;flex:none}
+.m-body{padding:18px 22px 24px;font-size:.92rem;line-height:1.55}
+.m-body table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.86rem}
+.m-body th,.m-body td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left}
+.m-body th{background:#f8f1f6}
+.m-body dt{font-weight:700;color:var(--plum);margin-top:10px}
+.m-body dd{margin:2px 0 0}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.72rem;font-weight:700}
+.chip.v{background:#e3faef;color:#13704b}.chip.p{background:#fff1d6;color:#8a5a00}
+
+/* BOTTOM DOCK */
+.dock{position:fixed;left:16px;bottom:16px;z-index:16;display:flex;gap:8px;flex-wrap:wrap}
+.dock button{border:1px solid #ffffff38;background:#12000fb3;color:#fff;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:.84rem;backdrop-filter:blur(8px)}
+.dock button:hover{background:#540045}
+.dock button.on{background:var(--lime);color:var(--plum)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:16;color:#f3dcec;font-size:.8rem;background:#12000f99;padding:8px 14px;border-radius:99px;pointer-events:none;transition:opacity .5s}
+@media(max-width:700px){.dock{bottom:auto;top:64px;left:8px}.dock button{padding:8px 10px;font-size:.76rem}.toast{display:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="fallback-bg" aria-hidden="true"></div>
+<canvas id="scene" aria-label="Sala tridimensional del museo con cinco estaciones. Use el menú superior para navegar sin el recorrido 3D." role="img"></canvas>
+
+<header class="top">
+  <div class="brand">MICROSALA<small>VERDADES INCÓMODAS</small></div>
+  <nav class="stations" id="menu" aria-label="Estaciones de la microsala"></nav>
+  <button class="homebtn" id="homeBtn" aria-label="Volver a la portada">⌂ Inicio</button>
+</header>
+
+<section id="cover" aria-labelledby="ctitle">
+  <div class="cover-card">
+    <div class="kicker">Museo Digital de las Verdades Incómodas · Microsala</div>
+    <h1 id="ctitle">¿Un título universitario garantiza una <em>mejor vida económica</em>?</h1>
+    <p>Educación superior, oportunidades y desigualdad en Colombia. Cinco estaciones para examinar una creencia con datos oficiales.</p>
+    <div class="cta">
+      <button class="btn lime" id="enter">Entrar a la sala →</button>
+      <button class="btn ghost" id="tourBtn">▶ Recorrido guiado</button>
+    </div>
+    <div class="hint">Arrastre para mirar alrededor · haga clic en un monolito para abrir su estación</div>
+  </div>
+</section>
+
+<aside id="panel" aria-live="polite">
+  <div class="p-head"><div class="tag" id="pTag"></div><h2 id="pTitle"></h2><button class="close" id="pClose" aria-label="Cerrar estación">✕</button></div>
+  <div class="p-body" id="pBody"></div>
+  <div class="p-foot"><button class="btn line" id="prev">← Anterior</button><button class="btn plum" id="next">Continuar →</button></div>
+</aside>
+
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="m-card"><div class="m-head"><div><div class="kicker" id="mKick">Ficha técnica</div><h3 id="mTitle"></h3></div><button id="mClose" aria-label="Cerrar ficha">✕</button></div><div class="m-body" id="mBody"></div></div>
+</div>
+
+<div class="dock">
+  <button id="dTour">▶ Recorrido</button>
+  <button id="dRot">⟲ Girar sala</button>
+  <button id="dSrc">Fuentes e IA</button>
+</div>
+<div class="toast" id="toast">Arrastre para explorar · clic en un monolito</div>
+
+<script>
+/* ============ CONTENIDO ============ */
+const SRC={
+ dane:{t:'DANE (2025). Encuesta Nacional de Calidad de Vida (ECV) 2024. Boletín técnico, 24 de abril de 2025.',u:'https://www.dane.gov.co/files/operaciones/ECV/bol-ECV-2024.pdf'},
+ oleInf:{t:'MEN – Observatorio Laboral para la Educación. Indicadores académicos y de vinculación laboral de las personas recién graduadas en educación superior. Corte 2023.',u:'https://ole.mineducacion.gov.co/1769/articles-425929_recurso_1.pdf'},
+ oleArt:{t:'OLE (29 sep. 2025). Educación superior en cifras: seguimiento del mercado laboral de los recién graduados durante el 2023.',u:'https://ole.mineducacion.gov.co/1769/w3-article-425938.html'},
+ micro:{t:'DANE. Microdatos ECV 2024 (catálogo 861).',u:'https://microdatos.dane.gov.co/index.php/catalog/861'},
+ ole:{t:'Portal del Observatorio Laboral para la Educación.',u:'https://ole.mineducacion.gov.co/portal/'}
+};
+const D={
+ years:[2019,2020,2021,2022,2023,2024],
+ total:[33.9,32.7,31.2,32.0,32.3,36.1],
+ cab:[40.7,39.0,36.8,38.4,38.6,42.6],
+ rur:[12.4,13.3,13.7,12.6,12.9,16.3],
+ sexo:{l:['Hombres','Mujeres'],a23:[27.5,37.0],a24:[31.6,40.5]},
+ dep:{l:['Atlántico','Bogotá','Guainía','Vaupés','Vichada'],v:[56.3,51.2,8.2,5.0,4.8]},
+ nivel:{l:['Técnica prof.','Tecnológica','Universitaria','Especialización','Esp. médico-quir.','Maestría','Doctorado'],v:[55.3,70.8,75.5,90.2,95.7,93.9,91.3]},
+ region:{l:['Bogotá','Centro Occidente','Centro Oriente','Occidente','Sur Oriente','Norte'],v:[83.7,78.0,76.5,73.3,69.4,67.2]},
+ vsexo:{l:['Hombres','Mujeres'],v:[78.4,76.8]}
+};
+const FICHAS={
+ acceso:{k:'Evidencia 1 · ficha técnica',t:'Personas de 17 a 21 años que alcanzaron la educación superior',h:()=>`
+  <span class="chip v">Verificado en la fuente</span>
+  <dl><dt>Qué mide</dt><dd>Porcentaje de personas de 17 a 21 años (edad teórica del nivel) que han alcanzado el nivel educativo superior. Es un indicador de <b>logro</b>, no de asistencia.</dd>
+  <dt>Fuente</dt><dd>DANE, ECV 2024, Tabla 17 (p. 17). <a href="${SRC.dane.u}" target="_blank" rel="noopener">Abrir boletín ↗</a></dd>
+  <dt>Áreas</dt><dd>«Cabecera» corresponde a las zonas urbanas municipales; «centros poblados y rural disperso» agrupa lo rural.</dd></dl>
+  <table><tr><th>Año</th><th>Total</th><th>Cabecera</th><th>Rural*</th><th>Brecha (pp)</th></tr>
+  ${D.years.map((y,i)=>`<tr><td>${y}</td><td>${f(D.total[i])} %</td><td>${f(D.cab[i])} %</td><td>${f(D.rur[i])} %</td><td>${f(D.cab[i]-D.rur[i])}</td></tr>`).join('')}</table>
+  <p class="src">*Centros poblados y rural disperso. Variación 2023–2024: total +3,7 pp; cabecera +4,0 pp; rural +3,4 pp.</p>`},
+ sexo:{k:'Evidencia 1 · desagregación',t:'Logro en educación superior por sexo (17 a 21 años)',h:()=>`
+  <span class="chip v">Verificado en la fuente</span>
+  <table><tr><th></th><th>2023</th><th>2024</th></tr><tr><td>Hombres</td><td>27,5 %</td><td>31,6 %</td></tr><tr><td>Mujeres</td><td>37,0 %</td><td>40,5 %</td></tr></table>
+  <p>En 2024 la brecha es de 9,0 puntos a favor de las mujeres (DANE, ECV 2024, Tabla 18, p. 18).</p>
+  <p>Contraste: en la vinculación formal de recién graduados la relación se invierte levemente (hombres 78,4 %, mujeres 76,8 %; OLE, corte 2023). Más acceso no se traduce automáticamente en mejor inserción.</p>`},
+ dep:{k:'Evidencia 1 · territorio',t:'Diferencias entre departamentos (2024)',h:()=>`
+  <span class="chip v">Verificado en la fuente</span>
+  <table><tr><th>Departamento</th><th>17–21 años con educación superior</th></tr>${D.dep.l.map((d,i)=>`<tr><td>${d}</td><td>${f(D.dep.v[i])} %</td></tr>`).join('')}</table>
+  <p>Entre Atlántico y Vichada hay más de 50 puntos de diferencia. El boletín reporta los valores extremos; la tabla completa está en los anexos y <a href="${SRC.micro.u}" target="_blank" rel="noopener">microdatos ↗</a>.</p>`},
+ vinc:{k:'Evidencia 2 · ficha técnica',t:'Tasa de cotizantes de recién graduados',h:()=>`
+  <span class="chip v">Verificado en la fuente</span>
+  <dl><dt>Qué mide</dt><dd>Porcentaje de graduados de educación superior que cotizan al sistema general de seguridad social (como dependientes o independientes). El OLE lo interpreta como vinculación al <b>mercado laboral formal</b>.</dd>
+  <dt>Cohorte</dt><dd>Personas graduadas en <b>2022</b>, observadas en <b>2023</b>: 77,4 % (año anterior 77,9 %, −0,4 pp).</dd>
+  <dt>Qué no mide</dt><dd>No incluye el empleo informal, no mide la calidad del empleo ni el salario, y no indica si el trabajo corresponde a lo estudiado.</dd>
+  <dt>Fuente</dt><dd>OLE, Indicadores académicos y de vinculación laboral, corte 2023, p. 16. <a href="${SRC.oleInf.u}" target="_blank" rel="noopener">Abrir informe ↗</a></dd></dl>
+  <table><tr><th>Composición 2023</th><th>Pregrado</th><th>Posgrado</th></tr><tr><td>Tasa total</td><td>73,4 %</td><td>91,3 %</td></tr><tr><td>Dependiente</td><td>61,9 %</td><td>70,1 %</td></tr><tr><td>Independiente</td><td>11,5 %</td><td>21,2 %</td></tr><tr><td>No cotizante</td><td>26,6 %</td><td>8,7 %</td></tr></table>`},
+ nivel:{k:'Evidencia 2 · desagregación',t:'Vinculación formal por nivel de formación (2023)',h:()=>`
+  <span class="chip v">Verificado en la fuente</span>
+  <table><tr><th>Nivel</th><th>Tasa de cotizantes</th></tr>${D.nivel.l.map((n,i)=>`<tr><td>${n}</td><td>${f(D.nivel.v[i])} %</td></tr>`).join('')}</table>
+  <p>La técnica profesional bajó de 59,4 % (2022) a 55,3 % (2023). En ingresos, la mediana de maestría pasó de 5–6 SMMLV en 2014 a 3,5–4 SMMLV en 2023 (OLE, p. 24).</p>`},
+ region:{k:'Evidencia 2 · territorio',t:'Vinculación formal por región (2023)',h:()=>`
+  <span class="chip v">Verificado en la fuente</span>
+  <table><tr><th>Región</th><th>Tasa de cotizantes</th></tr>${D.region.l.map((n,i)=>`<tr><td>${n}</td><td>${f(D.region.v[i])} %</td></tr>`).join('')}</table>
+  <p>Ingreso mediano (IBC): Bogotá entre 2 y 2,5 SMMLV; Sur Oriente entre 1 y 1,5 SMMLV (OLE, pp. 26–27). El mismo título rinde distinto según el territorio.</p>`},
+ teoria:{k:'Estación 3 · marco conceptual',t:'Referencias teóricas de las dos miradas',h:()=>`
+  <dl><dt>Capital humano</dt><dd>Schultz, T. W. (1961). Investment in Human Capital. <i>American Economic Review</i>, 51(1). Becker, G. S. (1964). <i>Human Capital</i>. NBER / Columbia University Press. La educación es una inversión que eleva la productividad y, con ella, los ingresos.</dd>
+  <dt>Señalización</dt><dd>Spence, M. (1973). Job Market Signaling. <i>Quarterly Journal of Economics</i>, 87(3). El título funciona como señal ante el empleador; su valor depende de cuántos lo tienen y de la institución que lo otorga.</dd>
+  <dt>Desigualdad de oportunidades</dt><dd>Los resultados dependen de circunstancias que la persona no elige: territorio, origen del hogar, calidad de la institución. Los datos de esta sala (rural 16,3 % frente a cabecera 42,6 %) ilustran esa condición.</dd></dl>`}
+};
+const f=(n,d=1)=>Number(n).toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+const ST=[
+ {n:'Provocación',c:'#c60052',title:'¿Un título garantiza el éxito?',
+  text:'En Colombia, estudiar una carrera suele mejorar la posibilidad de conseguir empleo formal y mejores ingresos. Pero el resultado no es automático: también influyen el territorio donde se vive, el origen económico del hogar, el nivel de formación y la demanda del mercado laboral. Antes de recorrer la sala, registre su postura inicial.'},
+ {n:'Evidencia',c:'#ff714b',title:'Los datos revelan desigualdades'},
+ {n:'Dos miradas',c:'#acffe9',title:'Inversión o señal: dos explicaciones'},
+ {n:'Prueba',c:'#eaff87',title:'Ponga a prueba su lectura de los datos'},
+ {n:'Veredicto',c:'#ffffff',title:'Un título ayuda, pero no garantiza'}
+];
+const OP1=['Sí, estudiar garantiza una mejor vida económica.','No, un título no garantiza nada.','Depende de las condiciones sociales y laborales.'];
+const FB1=['Registrado. Esta sala pondrá a prueba esa idea: los datos muestran ventajas, pero también brechas importantes.','Registrado. Los datos mostrarán que la educación sí aporta ventajas medibles, aunque no las asegura.','Registrado. Esta postura reconoce que hay condiciones; la sala mostrará cuáles pesan más.'];
+const QUIZ=[
+ {q:'El OLE reporta que el 77,4 % de los graduados de 2022 estaba vinculado en 2023. ¿Qué significa?',o:['El 77,4 % tiene algún tipo de empleo, formal o informal.','El 77,4 % cotizaba a seguridad social: estaba en el mercado laboral formal.','El 77,4 % gana más de cinco salarios mínimos.'],c:1,
+  e:['No. El indicador solo registra cotizantes; quien trabaja sin cotizar no aparece.','Correcto. Es la tasa de cotizantes: mide vinculación formal, no todo el empleo ni el salario.','No. El indicador no mide el nivel de ingreso.']},
+ {q:'En 2024, el 16,3 % de los jóvenes de 17 a 21 años de centros poblados y rural disperso había alcanzado la educación superior, frente al 42,6 % en cabeceras. ¿Qué conclusión es válida?',o:['Los jóvenes rurales se esfuerzan menos.','El acceso a la educación superior es desigual según el territorio.','La educación superior no sirve en el campo.'],c:1,
+  e:['No. El dato no mide esfuerzo; describe un resultado condicionado por oferta, distancia e ingresos.','Correcto. La brecha de 26,3 puntos muestra un acceso desigual; el dato no permite atribuirlo al esfuerzo individual.','No. El dato mide acceso, no utilidad ni rendimiento del título.']},
+ {q:'Las mujeres alcanzan más la educación superior (40,5 % frente a 31,6 %), pero su tasa de vinculación formal es menor (76,8 % frente a 78,4 %). ¿Qué indica?',o:['Que más educación no se traduce automáticamente en mejor inserción laboral.','Que las mujeres estudian carreras sin demanda.','Que los datos están equivocados.'],c:0,
+  e:['Correcto. El acceso y la inserción son resultados distintos; intervienen el mercado laboral y otras condiciones.','No. Los datos presentados no permiten esa inferencia; requeriría analizar programas y ocupaciones.','No. Son indicadores distintos (DANE y OLE), con poblaciones y periodos diferentes; no se contradicen.']}
+];
+const OP5=['Sí, ahora considero otros factores.','No, mantengo mi postura.','Necesito más información.'];
+const FB5=['Reconocer varios factores permite una lectura más completa del fenómeno.','Mantener una postura es válido cuando se contrasta con la evidencia y se reconocen sus límites.','Es una conclusión prudente: los datos tienen alcances y límites; revise las fichas técnicas y las fuentes.'];
+
+/* ============ ESTADO ============ */
+let cur=-1, ans1=null, ans5=null, quiz=[null,null,null], view='a', evTab='zona', ev2Tab='nivel', done=new Set(), charts=[];
+const $=id=>document.getElementById(id);
+
+/* ============ MENU ============ */
+$('menu').innerHTML=ST.map((s,i)=>`<button data-i="${i}" aria-label="Estación ${i+1}: ${s.n}"><b>0${i+1}</b><span>${s.n}</span></button>`).join('');
+$('menu').querySelectorAll('button').forEach(b=>b.onclick=()=>go(+b.dataset.i));
+function syncMenu(){$('menu').querySelectorAll('button').forEach((b,i)=>{b.classList.toggle('on',i===cur);b.classList.toggle('done',done.has(i));b.setAttribute('aria-current',i===cur?'step':'false')})}
+
+/* ============ RENDER ============ */
+function words(s){return s.replace(/<[^>]+>/g,' ').trim().split(/\s+/).length}
+function render(){
+ charts.forEach(c=>c.destroy());charts=[];
+ const s=ST[cur];$('pTag').textContent=`ESTACIÓN 0${cur+1} DE 05 · ${s.n.toUpperCase()}`;$('pTitle').textContent=s.title;
+ let h='';
+ if(cur===0){
+  h=`<p>${s.text}</p><div class="qhead">¿Qué opina usted inicialmente?</div><div class="opts">${OP1.map((o,i)=>`<button class="opt ${ans1===i?'sel':''}" data-a1="${i}">${o}</button>`).join('')}</div>${ans1!=null?`<div class="fb">${FB1[ans1]}</div>`:''}`;
+ }
+ if(cur===1){
+  h=`<p><b>Evidencia 1 · Acceso.</b> En 2024, el 36,1 % de los jóvenes de 17 a 21 años había alcanzado la educación superior. La cifra cambia según el territorio.</p>
+  <div class="seg" role="tablist">${[['zona','Zona'],['sexo','Sexo'],['dep','Departamento']].map(t=>`<button class="${evTab===t[0]?'on':''}" data-ev="${t[0]}">${t[1]}</button>`).join('')}</div>
+  <div class="chartbox"><canvas id="c1" role="img" aria-label="Gráfico de logro en educación superior, jóvenes de 17 a 21 años"></canvas></div>
+  <div class="stat-row"><button class="stat" data-fi="acceso"><b>36,1 %</b><span>Total nacional 2024</span></button><button class="stat" data-fi="acceso"><b>42,6 %</b><span>Cabeceras</span></button><button class="stat" data-fi="acceso"><b>16,3 %</b><span>Rural y centros poblados</span></button></div>
+  <p class="src">Fuente: <a href="${SRC.dane.u}" target="_blank" rel="noopener">DANE, ECV 2024</a>, tablas 17 y 18.</p>
+  <button class="more" data-fi="acceso">＋ Ficha técnica</button><button class="more" data-fi="${evTab==='dep'?'dep':'sexo'}">＋ ${evTab==='dep'?'Territorio':'Desagregación por sexo'}</button>
+  <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+  <p><b>Evidencia 2 · Inserción.</b> El 77,4 % de quienes se graduaron en 2022 cotizaba a seguridad social en 2023. La tasa sube con el nivel de formación y varía por región.</p>
+  <div class="seg">${[['nivel','Nivel'],['region','Región'],['sexo','Sexo']].map(t=>`<button class="${ev2Tab===t[0]?'on':''}" data-ev2="${t[0]}">${t[1]}</button>`).join('')}</div>
+  <div class="chartbox"><canvas id="c2" role="img" aria-label="Gráfico de tasa de cotizantes de recién graduados"></canvas></div>
+  <p class="src">Fuente: <a href="${SRC.oleInf.u}" target="_blank" rel="noopener">OLE – MEN, corte 2023</a>. Mide empleo formal (cotización), no todo el empleo.</p>
+  <button class="more" data-fi="vinc">＋ Ficha técnica</button><button class="more" data-fi="${ev2Tab==='region'?'region':'nivel'}">＋ ${ev2Tab==='region'?'Ingresos por región':'Detalle por nivel'}</button>
+  <p class="src" style="margin-top:12px">Son indicadores de fuentes, poblaciones y periodos distintos: no deben sumarse ni combinarse.</p>`;
+ }
+ if(cur===2){
+  const A=view==='a';
+  h=`<p>Ambas explicaciones aceptan que la educación importa. Difieren en <b>por qué</b> importa y en <b>para quién</b>. Seleccione una mirada para ver su argumento y la evidencia de la sala que la respalda.</p>
+  <div class="views"><button class="view a ${A?'on':''}" data-v="a"><h3>Mirada A · Capital humano</h3>Estudiar es una inversión que aumenta la productividad y, con ella, los ingresos.</button>
+  <button class="view b ${!A?'on':''}" data-v="b"><h3>Mirada B · Señal y desigualdad</h3>El título es una señal cuyo valor depende del territorio, la institución y el origen.</button></div>
+  <div class="versus">${A?`<b>Argumento:</b> a mayor formación, mayor probabilidad de empleo formal.<br><b>Evidencia en la sala:</b> la vinculación pasa de 55,3 % (técnica profesional) a 93,9 % (maestría).<br><b>Supuesto:</b> el mercado laboral premia las competencias adquiridas de forma similar para todas las personas.`:
+  `<b>Argumento:</b> el punto de partida condiciona quién estudia y cuánto rinde el título.<br><b>Evidencia en la sala:</b> acceso rural 16,3 % frente a 42,6 % en cabeceras; vinculación en Bogotá 83,7 % frente a 67,2 % en la región Norte.<br><b>Supuesto:</b> las oportunidades no están distribuidas de forma equitativa.`}</div>
+  <div class="chartbox" style="height:200px"><canvas id="c3" role="img" aria-label="${A?'Tasa de cotizantes por nivel de formación':'Brechas territoriales en acceso y vinculación'}"></canvas></div>
+  <button class="more" data-fi="teoria">＋ Referencias teóricas</button>`;
+ }
+ if(cur===3){
+  const sc=quiz.filter((a,i)=>a===QUIZ[i].c).length, answered=quiz.filter(a=>a!=null).length;
+  h=`<p>Tres retos breves. Elija la interpretación que los datos permiten sostener; recibirá una explicación inmediata.</p>
+  <div class="score">${QUIZ.map((q,i)=>`<i class="${quiz[i]==null?'':(quiz[i]===q.c?'ok':'bad')}"></i>`).join('')}</div>
+  ${QUIZ.map((q,qi)=>`<div class="qhead">Reto ${qi+1}</div><p style="margin:0 0 4px">${q.q}</p><div class="opts">${q.o.map((o,i)=>{let c='';if(quiz[qi]!=null){if(i===q.c)c='ok';else if(i===quiz[qi])c='bad'}return`<button class="opt ${c}" data-q="${qi}" data-o="${i}" ${quiz[qi]!=null?'aria-disabled="true"':''}>${o}</button>`}).join('')}</div>${quiz[qi]!=null?`<div class="fb ${quiz[qi]===q.c?'ok':'bad'}">${q.e[quiz[qi]]}</div>`:''}`).join('')}
+  ${answered===3?`<div class="verdict-box"><b>Resultado: ${sc} de 3.</b> ${sc===3?'Lectura rigurosa de los datos.':'Revise las fichas técnicas de la estación 02 y vuelva a intentarlo.'}</div><button class="more" id="retry">↺ Reintentar</button>`:''}`;
+ }
+ if(cur===4){
+  h=`<p>Un título universitario mejora la probabilidad de empleo formal, pero no asegura ingresos altos ni estabilidad. El acceso depende del territorio y del origen; el rendimiento del título cambia según el nivel, la región y el mercado laboral. La educación es una vía de movilidad social, no una garantía automática.</p>
+  <div class="verdict-box">Su postura inicial: <b>${ans1!=null?OP1[ans1]:'no registrada (vaya a la estación 01)'}</b></div>
+  <div class="qhead">¿Cambió su opinión después de ver la evidencia?</div><div class="opts">${OP5.map((o,i)=>`<button class="opt ${ans5===i?'sel':''}" data-a5="${i}">${o}</button>`).join('')}</div>${ans5!=null?`<div class="fb">${FB5[ans5]}</div>`:''}
+  <details><summary>Límites de esta conclusión</summary><ul><li>Las dos fuentes miden poblaciones y periodos distintos (17–21 años en 2024; graduados 2022 en 2023).</li><li>La tasa de cotizantes no capta el empleo informal ni la calidad del trabajo.</li><li>No se analizan ingresos individuales ni causalidad; se describen asociaciones.</li></ul></details>
+  <details><summary>Fuentes</summary><ul>${Object.values(SRC).map(s=>`<li>${s.t} <a href="${s.u}" target="_blank" rel="noopener">Enlace ↗</a></li>`).join('')}<li>Schultz (1961); Becker (1964); Spence (1973).</li></ul></details>
+  <details><summary>Declaración de uso de IA</summary><ul><li>Se usó IA (ChatGPT y Claude) para estructurar el guion, redactar borradores y programar la sala.</li><li>Todas las cifras se verificaron contra los documentos oficiales enlazados; las interpretaciones son responsabilidad del equipo.</li></ul></details>`;
+ }
+ $('pBody').innerHTML=h;$('pBody').scrollTop=0;
+ bind();drawCharts();
+ $('prev').disabled=cur===0;$('next').textContent=cur===4?'Salir ⌂':'Continuar →';
+ syncMenu();
+}
+function bind(){
+ const B=$('pBody');
+ B.querySelectorAll('[data-a1]').forEach(b=>b.onclick=()=>{ans1=+b.dataset.a1;done.add(0);render()});
+ B.querySelectorAll('[data-a5]').forEach(b=>b.onclick=()=>{ans5=+b.dataset.a5;done.add(4);render()});
+ B.querySelectorAll('[data-ev]').forEach(b=>b.onclick=()=>{evTab=b.dataset.ev;render()});
+ B.querySelectorAll('[data-ev2]').forEach(b=>b.onclick=()=>{ev2Tab=b.dataset.ev2;done.add(1);render()});
+ B.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;done.add(2);render()});
+ B.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const q=+b.dataset.q;if(quiz[q]!=null)return;quiz[q]=+b.dataset.o;if(quiz.every(a=>a!=null))done.add(3);render()});
+ B.querySelectorAll('[data-fi]').forEach(b=>b.onclick=()=>openFicha(b.dataset.fi));
+ const r=$('retry');if(r)r.onclick=()=>{quiz=[null,null,null];render()};
+}
+Chart.defaults.font.family='Inter';Chart.defaults.color='#6a5a66';
+function drawCharts(){
+ const pct={ticks:{callback:v=>v+' %'}};
+ if(cur===1){
+  let cfg;
+  if(evTab==='zona')cfg={type:'line',data:{labels:D.years,datasets:[{label:'Cabecera',data:D.cab,borderColor:'#540045',backgroundColor:'#540045',tension:.3},{label:'Total',data:D.total,borderColor:'#c60052',backgroundColor:'#c60052',borderDash:[5,4],tension:.3},{label:'Rural',data:D.rur,borderColor:'#ff714b',backgroundColor:'#ff714b',tension:.3}]},options:{maintainAspectRatio:false,scales:{y:{min:0,max:50,...pct}},plugins:{legend:{position:'bottom',labels:{boxWidth:12}}}}};
+  if(evTab==='sexo')cfg={type:'bar',data:{labels:['2023','2024'],datasets:[{label:'Hombres',data:[27.5,31.6],backgroundColor:'#acffe9',borderColor:'#2a9d80',borderWidth:1.5,borderRadius:6},{label:'Mujeres',data:[37.0,40.5],backgroundColor:'#c60052',borderRadius:6}]},options:{maintainAspectRatio:false,scales:{y:{min:0,max:50,...pct}},plugins:{legend:{position:'bottom'}}}};
+  if(evTab==='dep')cfg={type:'bar',data:{labels:D.dep.l,datasets:[{label:'2024',data:D.dep.v,backgroundColor:D.dep.v.map(v=>v>40?'#540045':'#ff714b'),borderRadius:6}]},options:{indexAxis:'y',maintainAspectRatio:false,scales:{x:{min:0,max:60,...pct}},plugins:{legend:{display:false}}}};
+  charts.push(new Chart($('c1'),cfg));
+  let c2;
+  if(ev2Tab==='nivel')c2={type:'bar',data:{labels:D.nivel.l,datasets:[{data:D.nivel.v,backgroundColor:D.nivel.v.map((v,i)=>i<3?'#ff714b':'#540045'),borderRadius:6}]},options:{maintainAspectRatio:false,scales:{y:{min:0,max:100,...pct},x:{ticks:{font:{size:9}}}},plugins:{legend:{display:false}}}};
+  if(ev2Tab==='region')c2={type:'bar',data:{labels:D.region.l,datasets:[{data:D.region.v,backgroundColor:'#c60052',borderRadius:6}]},options:{indexAxis:'y',maintainAspectRatio:false,scales:{x:{min:50,max:90,...pct}},plugins:{legend:{display:false}}}};
+  if(ev2Tab==='sexo')c2={type:'bar',data:{labels:D.vsexo.l,datasets:[{data:D.vsexo.v,backgroundColor:['#acffe9','#c60052'],borderColor:['#2a9d80','#c60052'],borderWidth:1.5,borderRadius:6}]},options:{maintainAspectRatio:false,scales:{y:{min:70,max:80,...pct}},plugins:{legend:{display:false}}}};
+  charts.push(new Chart($('c2'),c2));
+ }
+ if(cur===2){
+  const cfg=view==='a'?{type:'bar',data:{labels:D.nivel.l,datasets:[{label:'Tasa de cotizantes 2023',data:D.nivel.v,backgroundColor:'#2a9d80',borderRadius:6}]},options:{maintainAspectRatio:false,scales:{y:{min:0,max:100,...pct},x:{ticks:{font:{size:9}}}},plugins:{legend:{display:false}}}}
+  :{type:'bar',data:{labels:['Acceso: cabecera','Acceso: rural','Vinculación: Bogotá','Vinculación: Norte'],datasets:[{data:[42.6,16.3,83.7,67.2],backgroundColor:['#540045','#ff714b','#540045','#ff714b'],borderRadius:6}]},options:{maintainAspectRatio:false,scales:{y:{min:0,max:100,...pct},x:{ticks:{font:{size:9}}}},plugins:{legend:{display:false}}}};
+  charts.push(new Chart($('c3'),cfg));
+ }
+}
+function openFicha(k){const F=FICHAS[k];$('mKick').textContent=F.k;$('mTitle').textContent=F.t;$('mBody').innerHTML=F.h();$('modal').classList.add('open');$('mClose').focus()}
+function openSources(){$('mKick').textContent='Créditos';$('mTitle').textContent='Fuentes, verificación y uso de IA';
+ $('mBody').innerHTML=`<p><span class="chip v">Verificado</span> Todas las cifras de la sala se contrastaron con los documentos oficiales enlazados (noviembre de 2026).</p><ul>${Object.values(SRC).map(s=>`<li>${s.t} <a href="${s.u}" target="_blank" rel="noopener">Enlace ↗</a></li>`).join('')}</ul>
+ <p><b>Marco teórico:</b> Schultz (1961); Becker (1964); Spence (1973).</p><p><b>Uso de IA:</b> ChatGPT y Claude apoyaron la estructura del guion, la redacción y la programación. La verificación de datos y las conclusiones son responsabilidad del equipo.</p>
+ <p class="src">Seminario de Política Económica y Social · Universidad de Cundinamarca · Museo Digital de las Verdades Incómodas (R2-A8-S16).</p>`;$('modal').classList.add('open')}
+$('mClose').onclick=()=>$('modal').classList.remove('open');
+$('modal').onclick=e=>{if(e.target.id==='modal')$('modal').classList.remove('open')};
+addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').classList.remove('open');if($('modal').classList.contains('open'))return;if(e.key==='ArrowRight'&&cur>=0&&cur<4)go(cur+1);if(e.key==='ArrowLeft'&&cur>0)go(cur-1)});
+
+/* ============ NAVEGACIÓN ============ */
+function go(i){stopTour();$('cover').classList.add('hide');cur=i;$('panel').classList.add('open');render();fly(i)}
+function home(){stopTour();cur=-1;$('panel').classList.remove('open');$('cover').classList.remove('hide');syncMenu();fly(-1)}
+$('enter').onclick=()=>go(0);$('homeBtn').onclick=home;
+$('prev').onclick=()=>{if(cur>0)go(cur-1)};
+$('next').onclick=()=>{if(cur<4)go(cur+1);else home()};
+$('pClose').onclick=()=>{$('panel').classList.remove('open')};
+$('dSrc').onclick=openSources;
+
+/* ============ ESCENA 3D ============ */
+let webgl=true, renderer, scene, camera, monos=[], rings=[], parts, autoRot=false, yaw=0, pitch=0, camGoal={cx:0,cy:6,cz:14,tx:0,ty:2.6,tz:-3}, t0=performance.now();
+const POS=ST.map((s,i)=>{const a=-Math.PI*0.62+i*(Math.PI*1.24/4);return{x:Math.sin(a)*9,z:-Math.cos(a)*9,a}});
+function label(num,name,col){const c=document.createElement('canvas');c.width=512;c.height=768;const g=c.getContext('2d');
+ const gr=g.createLinearGradient(0,0,0,768);gr.addColorStop(0,'#540045');gr.addColorStop(1,'#1a0016');g.fillStyle=gr;g.fillRect(0,0,512,768);
+ g.strokeStyle=col;g.lineWidth=10;g.strokeRect(14,14,484,740);
+ g.fillStyle=col;g.font='bold 230px Space Grotesk, Arial';g.textAlign='center';g.fillText('0'+num,256,330);
+ g.fillStyle='#ffffff';g.font='600 56px Space Grotesk, Arial';g.fillText(name.toUpperCase(),256,460);
+ g.fillStyle='#eaff87';g.font='500 34px Inter, Arial';g.fillText('ESTACIÓN',256,540);
+ g.fillStyle=col;g.fillRect(156,600,200,8);return new THREE.CanvasTexture(c)}
+function init3D(){
+ try{renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true})}catch(e){webgl=false;return}
+ if(!renderer.getContext()){webgl=false;return}
+ renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);
+ scene=new THREE.Scene();scene.fog=new THREE.Fog(0x12000f,14,46);
+ camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,200);
+ scene.add(new THREE.AmbientLight(0xffffff,.45));
+ const key=new THREE.PointLight(0xc60052,1.4,60);key.position.set(0,12,4);scene.add(key);
+ const fill=new THREE.PointLight(0xacffe9,.8,60);fill.position.set(-10,6,-8);scene.add(fill);
+ // piso
+ const floor=new THREE.Mesh(new THREE.CircleGeometry(30,64),new THREE.MeshStandardMaterial({color:0x1f0019,roughness:.35,metalness:.6}));floor.rotation.x=-Math.PI/2;scene.add(floor);
+ const grid=new THREE.PolarGridHelper(26,24,12,64,0x540045,0x3a0030);grid.position.y=.01;scene.add(grid);
+ // pared curva
+ const wall=new THREE.Mesh(new THREE.CylinderGeometry(16,16,12,64,1,true,-Math.PI*0.85,Math.PI*1.7),new THREE.MeshStandardMaterial({color:0x2a0024,side:THREE.BackSide,roughness:.9}));wall.position.y=6;wall.rotation.y=Math.PI;scene.add(wall);
+ // título flotante
+ const tc=document.createElement('canvas');tc.width=1024;tc.height=256;const tg=tc.getContext('2d');tg.fillStyle='#eaff87';tg.font='bold 74px Space Grotesk, Arial';tg.textAlign='center';tg.fillText('VERDADES INCÓMODAS',512,110);tg.fillStyle='#ffffff';tg.font='500 40px Inter, Arial';tg.fillText('¿Un título garantiza una mejor vida económica?',512,190);
+ const tm=new THREE.Mesh(new THREE.PlaneGeometry(12,3),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(tc),transparent:true}));tm.position.set(0,8.6,-12);scene.add(tm);
+ // estaciones
+ ST.forEach((s,i)=>{const p=POS[i];const g=new THREE.Group();g.position.set(p.x,0,p.z);g.rotation.y=-p.a;
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(1.7,1.9,.4,48),new THREE.MeshStandardMaterial({color:0x2e0028,metalness:.7,roughness:.3}));base.position.y=.2;g.add(base);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(1.75,.05,12,80),new THREE.MeshBasicMaterial({color:new THREE.Color(s.c)}));ring.rotation.x=Math.PI/2;ring.position.y=.42;g.add(ring);rings.push(ring);
+  const mono=new THREE.Mesh(new THREE.BoxGeometry(2.2,3.3,.25),[0,1,2,3].map(()=>new THREE.MeshStandardMaterial({color:0x3a0032,metalness:.5,roughness:.4})).concat([new THREE.MeshBasicMaterial({map:label(i+1,s.n,s.c)}),new THREE.MeshStandardMaterial({color:0x3a0032})]));
+  mono.position.y=2.3;mono.userData.i=i;g.add(mono);monos.push(mono);
+  const halo=new THREE.PointLight(new THREE.Color(s.c),.9,6);halo.position.set(0,1.2,1.2);g.add(halo);
+  scene.add(g)});
+ // partículas
+ const n=500,geo=new THREE.BufferGeometry(),arr=new Float32Array(n*3);for(let i=0;i<n;i++){arr[i*3]=(Math.random()-.5)*40;arr[i*3+1]=Math.random()*14;arr[i*3+2]=(Math.random()-.5)*40}
+ geo.setAttribute('position',new THREE.BufferAttribute(arr,3));parts=new THREE.Points(geo,new THREE.PointsMaterial({color:0xeaff87,size:.06,transparent:true,opacity:.7}));scene.add(parts);
+ bindPointer();fly(-1,true);loop();
+}
+function fly(i,instant){if(!webgl)return;yaw=0;pitch=0;
+ if(i<0){camGoal={cx:0,cy:6,cz:14,tx:0,ty:2.6,tz:-3}}
+ else{const p=POS[i],wide=innerWidth>700,d=wide?9:9.5,sh=wide?2.8:0,rx=Math.cos(p.a),rz=Math.sin(p.a),fx=-Math.sin(p.a),fz=Math.cos(p.a);
+  camGoal={cx:p.x+fx*d+rx*sh,cy:wide?2.9:3.4,cz:p.z+fz*d+rz*sh,tx:p.x+rx*sh,ty:wide?2.3:3.3,tz:p.z+rz*sh}}
+ if(instant)Object.assign(S3,camGoal)}
+const S3={cx:0,cy:6,cz:14,tx:0,ty:2.6,tz:-3};
+let lastT=performance.now();
+function loop(){requestAnimationFrame(loop);const now=performance.now(),t=(now-t0)/1000,dt=Math.min(.25,(now-lastT)/1000);lastT=now;const kf=1-Math.exp(-dt*3.2);
+ for(const k in camGoal)S3[k]+=(camGoal[k]-S3[k])*kf;
+ if(autoRot&&cur<0)yaw+=.003;
+ let vx=S3.cx-S3.tx,vy=S3.cy-S3.ty,vz=S3.cz-S3.tz;const c=Math.cos(yaw),s=Math.sin(yaw);
+ const rx=vx*c+vz*s,rz=-vx*s+vz*c;
+ camera.position.set(S3.tx+rx,S3.ty+vy+pitch*6,S3.tz+rz);camera.lookAt(S3.tx,S3.ty,S3.tz);
+ monos.forEach((m,i)=>{m.position.y=2.3+Math.sin(t*1.2+i)*.12;m.rotation.y=i===cur?0:Math.sin(t*.5+i)*.15});
+ rings.forEach((r,i)=>{r.scale.setScalar(i===cur?1.12+Math.sin(t*3)*.04:1)});
+ parts.rotation.y=t*.02;
+ renderer.render(scene,camera)}
+function bindPointer(){
+ const cv=$('scene');let down=false,lx=0,ly=0,moved=0;
+ const ray=new THREE.Raycaster(),mv=new THREE.Vector2();
+ cv.addEventListener('pointerdown',e=>{down=true;lx=e.clientX;ly=e.clientY;moved=0});
+ addEventListener('pointerup',e=>{if(down&&moved<6){mv.x=e.clientX/innerWidth*2-1;mv.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mv,camera);const hit=ray.intersectObjects(monos);if(hit.length)go(hit[0].object.userData.i)}down=false});
+ addEventListener('pointermove',e=>{if(down){const dx=e.clientX-lx,dy=e.clientY-ly;moved+=Math.abs(dx)+Math.abs(dy);yaw-=dx*.005;pitch=Math.max(-.3,Math.min(.6,pitch+dy*.004));lx=e.clientX;ly=e.clientY}
+  else if(webgl){mv.x=e.clientX/innerWidth*2-1;mv.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mv,camera);cv.style.cursor=ray.intersectObjects(monos).length?'pointer':'grab'}});
+ cv.addEventListener('wheel',e=>{const k=1+e.deltaY*.001;['cx','cy','cz'].forEach((q,j)=>{const tq=['tx','ty','tz'][j];camGoal[q]=camGoal[tq]+(camGoal[q]-camGoal[tq])*Math.max(.6,Math.min(1.5,k))})},{passive:true});
+}
+addEventListener('resize',()=>{if(!webgl)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+/* recorrido guiado */
+let tourT=null;
+function startTour(){stopTour();let i=0;$('dTour').classList.add('on');$('dTour').textContent='■ Detener';const step=()=>{cur=i;$('cover').classList.add('hide');$('panel').classList.add('open');render();fly(i);i++;if(i<5)tourT=setTimeout(step,9000);else tourT=setTimeout(stopTour,9000)};step()}
+function stopTour(){clearTimeout(tourT);tourT=null;$('dTour').classList.remove('on');$('dTour').textContent='▶ Recorrido'}
+$('dTour').onclick=()=>tourT?stopTour():startTour();
+$('tourBtn').onclick=startTour;
+$('dRot').onclick=()=>{autoRot=!autoRot;$('dRot').classList.toggle('on',autoRot);if(autoRot&&cur>=0){$('panel').classList.remove('open');cur=-1;syncMenu();fly(-1)}};
+setTimeout(()=>{$('toast').style.opacity=0},7000);
+
+if(window.THREE)init3D();else webgl=false;
+syncMenu();
+</script>
+</body>
+</html>
